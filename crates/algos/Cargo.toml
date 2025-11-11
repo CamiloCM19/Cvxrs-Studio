@@ -1,0 +1,25 @@
+[package]
+name = "cvxrs-algos"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Algorithmic implementations (ADMM, IPM) for cvxrs."
+
+[dependencies]
+anyhow.workspace = true
+cvxrs-core = { path = "../core" }
+cvxrs-linsys = { path = "../linsys" }
+itertools.workspace = true
+num-traits.workspace = true
+rand.workspace = true
+serde.workspace = true
+sprs.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[features]
+default = ["admm"]
+admm = []
+ipm = []

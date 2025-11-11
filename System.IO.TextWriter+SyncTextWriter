@@ -1,0 +1,100 @@
+    last_problem_dir: Option<PathBuf>,
+    last_output_dir: Option<PathBuf>,
+    banner: Option<BannerMessage>,
+    task_state: Arc<Mutex<TaskState>>,
+}
+
+impl CvxrsApp {
+    fn new(cc: &CreationContext<'_>) -> Self {
+        configure_style(&cc.egui_ctx);
+
+        let default_dir = env::current_dir().ok();
+
+        Self {
+            problem_path: None,
+            problem_input: String::new(),
+            output_path: None,
+            output_input: String::new(),
+            method: MethodChoice::Admm,
+            tolerance_input: String::new(),
+            max_iters_input: String::new(),
+            time_limit_input: String::new(),
+            write_solution: false,
+            log_json: false,
+            last_problem_dir: default_dir.clone(),
+            last_output_dir: default_dir,
+            banner: Some(BannerMessage {
+                text: "Paso 1: selecciona o carga un problema en formato JSON para comenzar."
+                    .into(),
+                kind: BannerKind::Info,
+            }),
+            task_state: Arc::new(Mutex::new(TaskState::Idle)),
+        }
+    }
+
+    fn is_busy(&self) -> bool {
+        matches!(
+            *self.task_state.lock().expect("task state poisoned"),
+            TaskState::Running
+        )
+    }
+
+    fn start_solve(&mut self, ctx: egui::Context) {
+        if self.is_busy() {
+            return;
+        }
+
+        if self.problem_path.is_none() {
+            if let Some(candidate) = Self::path_from_input(&self.problem_input) {
+                self.problem_path = Some(candidate);
+            }
+        }
+
+        let problem_path = match self.problem_path.clone() {
+            Some(path) => path,
+            None => {
+                self.set_failure("Selecciona un archivo de problema antes de resolver.");
+                ctx.request_repaint();
+                return;
+            }
+        };
+
+        let tolerance = match parse_optional_f64(&self.tolerance_input) {
+            Ok(value) => value,
+            Err(err) => {
+                self.set_failure(format!("Tolerancia invalida: {}", err));
+                ctx.request_repaint();
+                return;
+            }
+        };
+
+        let max_iters = match parse_optional_usize(&self.max_iters_input) {
+            Ok(value) => value,
+            Err(err) => {
+                self.set_failure(format!("Iteraciones maximas invalidas: {}", err));
+                ctx.request_repaint();
+                return;
+            }
+        };
+
+        let time_limit = match parse_optional_u64(&self.time_limit_input) {
+            Ok(value) => value,
+            Err(err) => {
+                self.set_failure(format!("Limite de tiempo invalido: {}", err));
+                ctx.request_repaint();
+                return;
+            }
+        };
+
+        let output_path = if self.write_solution {
+            if self.output_path.is_none() {
+                let trimmed = self.output_input.trim();
+                if !trimmed.is_empty() {
+                    self.output_path = Some(PathBuf::from(trimmed));
+                }
+            }
+            match self.output_path.clone() {
+                Some(path) => Some(path),
+                None => {
+                    self.set_failure("Selecciona un archivo de salida para guardar la solucion.");
+                    ctx.request_repaint();

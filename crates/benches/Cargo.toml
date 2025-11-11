@@ -1,0 +1,23 @@
+[package]
+name = "cvxrs-benches"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Benchmark harness for cvxrs."
+
+[dependencies]
+anyhow.workspace = true
+criterion.workspace = true
+cvxrs-api = { path = "../api" }
+cvxrs-core = { path = "../core" }
+rand.workspace = true
+sprs.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[[bench]]
+name = "solve_qp"
+harness = false

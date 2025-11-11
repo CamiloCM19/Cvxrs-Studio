@@ -1,0 +1,16 @@
+[package]
+name = "cvxrs-io"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "I/O utilities for cvxrs (JSON, MPS)."
+
+[dependencies]
+anyhow.workspace = true
+cvxrs-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+sprs.workspace = true
+thiserror.workspace = true
